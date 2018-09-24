@@ -44,7 +44,4 @@ class Water_tank(models.Model):
 	street_number = models.PositiveSmallIntegerField()
 	filled_percentage = models.PositiveSmallIntegerField()
 	zone = models.ForeignKey('Zone', on_delete=models.CASCADE)
-	
-	
-	
-	
+

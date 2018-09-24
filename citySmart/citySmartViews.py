@@ -11,7 +11,12 @@ from . import models as MDL, Model_Serializers as SRLZR
 
 def index(request):
 	return HttpResponse("HEllo....!!!")
-	
+
+def get_new_number(str_number, padding): #HN010002, 4 
+	num_part = int(str_number[len(str_number)-padding:])+1
+	str_part = str_number[:len(str_number)-padding]
+	return str_part + str(num_part).zfill(padding)
+
 @api_view()
 def houses_List(request):
 	list_of_houses = MDL.House.objects.all()
@@ -89,7 +94,7 @@ class House_details(APIView):
 		else:
 			return Response({"details": "Invalid Details", "status":"400"}, status = status.HTTP_400_BAD_REQUEST)
 
-class Street_light(GNVW, MXN.RetrieveModelMixin, MXN.DestroyModelMixin, MXN.UpdateModelMixin):
+class Street_light(GNVW, MXN.RetrieveModelMixin, MXN.DestroyModelMixin):
 	queryset = MDL.Street_light.objects.all()
 	lookup_field = 'light_id'
 	lookup_url_kwarg = 'light_no'
@@ -103,7 +108,18 @@ class Street_light(GNVW, MXN.RetrieveModelMixin, MXN.DestroyModelMixin, MXN.Upda
 		return self.destroy(request, light_no)
 		
 	def patch(self, request, light_no):
-		return self.partial_update(request, light_no)
+		query_set = MDL.Street_light.objects.filter(light_id = light_no)
+		
+		if query_set.exists() is False:
+			return Response({"details":"Invalid light number. Provide correct ID in url"}, status = status.HTTP_400_BAD_REQUEST)
+		
+		try:
+			if request.data['live_status'] not in ["DEAD","SICK","ALIVE"]:
+				raise ValueError
+			query_set.update(live_status = request.data['live_status'], running_status = request.data['running_status'])
+			return self.retrieve(request, light_no)
+		except:
+			return Response({"live_status":"Valid values are ALIVE, DEAD, SICK","running_status": "valid values are True/1 or False/0" }, status=status.HTTP_400_BAD_REQUEST)
 		
 	def post(self, request, light_no):
 		light_details = copy.deepcopy(request.data)
@@ -125,7 +141,7 @@ class Street_light(GNVW, MXN.RetrieveModelMixin, MXN.DestroyModelMixin, MXN.Upda
 		
 		serialized_details = SRLZR.Street_light_Serializer(data = light_details)
 		if serialized_details.is_valid():
-			#serialized_details.save()
+			serialized_details.save()
 			return Response({"details":"Light added successfully", "light_ID":light_details['light_id']},\
 							status = status.HTTP_201_CREATED)
 			
@@ -133,8 +149,55 @@ class Street_light(GNVW, MXN.RetrieveModelMixin, MXN.DestroyModelMixin, MXN.Upda
 			return Response({"street_number":"This field is required.","live_status":"Valid values: ALIVE, DEAD, SICK"},\
 							 status = status.HTTP_400_BAD_REQUEST)
 	
-def get_new_number(str_number, padding): #HN010002, 4 
-	num_part = int(str_number[len(str_number)-padding:])+1
-	str_part = str_number[:len(str_number)-padding]
-	return str_part + str(num_part).zfill(padding)
-
+class Dustbin(GNVW, MXN.RetrieveModelMixin, MXN.DestroyModelMixin):
+	queryset = MDL.Dustbin.objects.all()
+	lookup_field = 'dustbin_id'
+	lookup_url_kwarg = 'dustbin_id'
+	
+	serializer_class = SRLZR.Dustbin_Serializer
+	
+	def get(self, request, dustbin_id):
+		return self.retrieve(request, dustbin_id)
+		
+	def delete(self, request, dustbin_id):
+		return self.destroy(request, dustbin_id)
+		
+	def patch(self, request, dustbin_id):
+		query_set = MDL.Dustbin.objects.filter(dustbin_id = dustbin_id)
+		
+		if query_set.exists() is False:
+			return Response({"details":"Invalid Dustbin ID. Provide correct ID in url"}, status = status.HTTP_400_BAD_REQUEST)
+		
+		try:
+			query_set.update(filled_status = request.data['filled_status'])
+			return self.retrieve(request, dustbin_id)
+		except:
+			return Response({"details":"Valid values for filled_stustus: True/1 or False/0"}, status=status.HTTP_400_BAD_REQUEST)
+	
+class Water_tank(GNVW, MXN.RetrieveModelMixin, MXN.DestroyModelMixin):
+	queryset = MDL.Water_tank.objects.all()
+	lookup_field = 'water_tank_id'
+	lookup_url_kwarg = 'water_tank_id'
+	
+	serializer_class = SRLZR.Water_tank_Serializer
+	
+	def get(self, request, water_tank_id):
+		return self.retrieve(request, water_tank_id)
+		
+	def delete(self, request, water_tank_id):
+		return self.destroy(request, water_tank_id)
+		
+	def patch(self, request, water_tank_id):
+		query_set = MDL.Water_tank.objects.filter(water_tank_id = water_tank_id)
+		
+		if query_set.exists() is False:
+			return Response({"details":"Invalid Water_tank ID. Provide correct ID in url"}, status = status.HTTP_400_BAD_REQUEST)
+		
+		try:
+			if int(request.data['filled_percentage']) > 100:
+				raise ValueError
+			query_set.update(filled_percentage = request.data['filled_percentage'])
+			return self.retrieve(request, water_tank_id)
+		except:
+			return Response({"filled_percentage":"Integer values between 0-100 are only valid"}, status=status.HTTP_400_BAD_REQUEST)
+	
