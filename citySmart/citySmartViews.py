@@ -16,6 +16,13 @@ def get_new_number(str_number, padding): #HN010002, 4
 	num_part = int(str_number[len(str_number)-padding:])+1
 	str_part = str_number[:len(str_number)-padding]
 	return str_part + str(num_part).zfill(padding)
+	
+def get_zone(zone_id):
+	query_set = MDL.Zone.objects.filter(zone_id = zone_id)
+	if query_set.exists():
+		return query_set[0]
+	else:
+		return None
 
 @api_view()
 def houses_List(request):
@@ -123,7 +130,7 @@ class Street_light(GNVW, MXN.RetrieveModelMixin, MXN.DestroyModelMixin):
 		
 	def post(self, request, light_no):
 		light_details = copy.deepcopy(request.data)
-		zone = get_zone_and_new_id(light_details['zone_id'])
+		zone = get_zone(light_details['zone_id'])
 		
 		if zone is None:
 			return Response({"details":"Invalid zone id"}, status = status.HTTP_400_BAD_REQUEST)
@@ -139,15 +146,21 @@ class Street_light(GNVW, MXN.RetrieveModelMixin, MXN.DestroyModelMixin):
 		light_details['light_id'] = new_light_number
 		light_details['zone'] = zone.zone_id
 		
-		serialized_details = SRLZR.Street_light_Serializer(data = light_details)
-		if serialized_details.is_valid():
-			serialized_details.save()
-			return Response({"details":"Light added successfully", "light_ID":light_details['light_id']},\
-							status = status.HTTP_201_CREATED)
-			
-		else:
-			return Response({"street_number":"This field is required.","live_status":"Valid values: ALIVE, DEAD, SICK"},\
-							 status = status.HTTP_400_BAD_REQUEST)
+		try:
+			if int(light_details['street_number']) > 20 or int(light_details['street_number']) == 0:   #Hard codded value
+				raise ValueError
+		
+			serialized_details = SRLZR.Street_light_Serializer(data = light_details)
+			if serialized_details.is_valid():
+				serialized_details.save()
+				return Response({"details":"Light added successfully", "light_ID":light_details['light_id']},\
+								status = status.HTTP_201_CREATED)
+				
+			else:
+				raise ValueError
+		except ValueError:
+			return Response({"street_number":"Positive integers less than 20 are valid.","live_status":"Valid values: ALIVE, DEAD, SICK"},\
+							status = status.HTTP_400_BAD_REQUEST)
 	
 class Dustbin(GNVW, MXN.RetrieveModelMixin, MXN.DestroyModelMixin):
 	queryset = MDL.Dustbin.objects.all()
@@ -174,6 +187,37 @@ class Dustbin(GNVW, MXN.RetrieveModelMixin, MXN.DestroyModelMixin):
 		except:
 			return Response({"details":"Valid values for filled_stustus: True/1 or False/0"}, status=status.HTTP_400_BAD_REQUEST)
 	
+	def post(self, request, dustbin_id):
+		dustbin_details = copy.deepcopy(request.data)
+		zone = get_zone(dustbin_details['zone_id'])
+		if zone is None:
+			return Response({'details':"Invalid zone_id"}, status = status.HTTP_400_BAD_REQUEST)
+		
+		any_dustbin = MDL.Dustbin.objects.all().order_by("-dustbin_id")
+		if any_dustbin.exists():
+			new_dustbin = get_new_number(any_dustbin[0].dustbin_id, 7)
+		else:
+			new_dustbin = 'dbn0000001'
+		
+		dustbin_details['dustbin_id'] = new_dustbin
+		dustbin_details['zone'] = zone.zone_id
+		del(dustbin_details['zone_id'])
+		
+		try:
+			if int(dustbin_details['street_number']) > 20 or int(dustbin_details['street_number']) == 0:   #Hard codded value
+				raise ValueError
+			
+			serialized_details = self.serializer_class(data = dustbin_details)
+			if serialized_details.is_valid():
+				serialized_details.save()
+				return Response({"details":"New Dustbin details added successfully","Dustbin":dustbin_details['dustbin_id']}, \
+								status = status.HTTP_201_CREATED)
+			else:
+				raise ValueError
+		except (ValueError, KeyError) as error:
+			return Response({'street_number':'Positive integers less than 20 are valid','filled_status':'True/1 or False/0 are valid'},\
+							status = status.HTTP_400_BAD_REQUEST)
+			
 class Water_tank(GNVW, MXN.RetrieveModelMixin, MXN.DestroyModelMixin):
 	queryset = MDL.Water_tank.objects.all()
 	lookup_field = 'water_tank_id'
@@ -201,3 +245,37 @@ class Water_tank(GNVW, MXN.RetrieveModelMixin, MXN.DestroyModelMixin):
 		except:
 			return Response({"filled_percentage":"Integer values between 0-100 are only valid"}, status=status.HTTP_400_BAD_REQUEST)
 	
+	def post(self, request, water_tank_id):
+		water_tank_details = copy.deepcopy(request.data)
+		
+		zone = get_zone(water_tank_details['zone_id'])
+		if zone is None:
+			return Response({'details':"Invalid zone_id"}, status = status.HTTP_400_BAD_REQUEST)
+		
+		any_water_tank = MDL.Water_tank.objects.all().order_by("-water_tank_id")
+		if any_water_tank.exists():
+			new_water_tank = get_new_number(any_water_tank[0].water_tank_id, 6)
+		else:
+			new_water_tank = 'tank000001'
+		
+		water_tank_details['water_tank_id'] = new_water_tank
+		water_tank_details['zone'] = zone.zone_id
+		del(water_tank_details['zone_id'])
+		
+		try:
+			if int(water_tank_details['street_number']) > 20 or int(water_tank_details['street_number']) == 0:   #Hard codded value
+				raise ValueError
+			if int(water_tank_details['filled_percentage']) > 100:
+				raise ValueError
+			
+			serialized_details = self.serializer_class(data = water_tank_details)
+			if serialized_details.is_valid():
+				serialized_details.save()
+				return Response({"details":"New Water Tank details added successfully",'Water_tank':water_tank_details['water_tank_id']}, \
+								status = status.HTTP_201_CREATED)
+			else:
+				raise ValueError
+		except (ValueError, KeyError) as error:
+			return Response({'street_number':'Positive integers less than 20 are valid',"filled_percentage":"Integer values between 0-100 are only valid"},\
+							 status = status.HTTP_400_BAD_REQUEST)
+							 
