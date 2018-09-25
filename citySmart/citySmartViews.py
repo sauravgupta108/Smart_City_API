@@ -48,59 +48,6 @@ def water_tank_list(request):
 	serialized_list = SRLZR.Water_tank_Serializer(water_tank_list, many = True)
 	return Response(serialized_list.data)
 	
-class House_details(APIView):
-	def get_house_details(self, house_name):
-		try:
-			return MDL.House.objects.get(name = house_name)
-		except:
-			return None
-			
-	def get(self, request, house_name, format = None):
-		house_detail_obj = self.get_house_details(house_name)
-		if house_detail_obj:
-			serialized_house_details = SRLZR.House_Serializer(house_detail_obj)
-			return Response(serialized_house_details.data)
-		else:
-			return Response({'status':'404 DoesNotExist'}, status = status.HTTP_404_NOT_FOUND)
-			
-	def delete(self, request, house_name, format = None):
-		house_detail_obj = self.get_house_details(house_name)
-		if house_detail_obj:
-			house_detail_obj.delete()
-			return Response({"message":"Record deleted successfully","House Name": house_name, "Zone" : house_detail_obj.place.zone_id})
-		else:
-			return Response({'status':'404 DoesNotExist'}, status = status.HTTP_404_NOT_FOUND)
-			
-	def post(self, request, house_name, format = None):
-		house_details = copy.deepcopy(request.data)
-		
-		try:
-			zone = MDL.Zone.objects.get(zone_id = house_details['zone_id'])
-		except:
-			return Response({"details": "Invalid Zone ID", "status":"400"}, status = status.HTTP_400_BAD_REQUEST)
-		
-		any_house = MDL.House.objects.filter(place_id = zone.zone_id).order_by('-name')
-		new_house_number = None		
-		if any_house.exists():
-			last_house_number = any_house[0].name
-			new_house_number = get_new_number(last_house_number, 4)				
-		else:
-			zn_part = str(int(zone.zone_id[4:])).zfill(2)
-			new_house_number = 'HN'+ zn_part + '0001'
-			del(zn_part)
-		
-		del(house_details['zone_id'])
-		house_details['name'] = new_house_number
-		house_details['place'] = zone.zone_id
-		
-		serialized_house_details = SRLZR.House_Serializer(data = house_details)
-		if serialized_house_details.is_valid():
-			serialized_house_details.save()
-			return Response({'status':'201', 'details': "House_details_added_successfully",'house_name':serialized_house_details.data['name']},\
-							 status = status.HTTP_201_CREATED)
-		else:
-			return Response({"details": "Invalid Details", "status":"400"}, status = status.HTTP_400_BAD_REQUEST)
-
 class Street_light(GNVW, MXN.RetrieveModelMixin, MXN.DestroyModelMixin):
 	queryset = MDL.Street_light.objects.all()
 	lookup_field = 'light_id'

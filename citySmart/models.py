@@ -1,18 +1,18 @@
 from django.db import models
 
 class Person(models.Model):
-	aadhar_number = models.DecimalField(max_digits=12, decimal_places = 0, primary_key = True)
+	person_id = models.CharField(max_length=12, primary_key = True)
 	name = models.CharField(max_length=30)
 	date_of_birth = models.DateField(auto_now=False)
-	profession = models.CharField(max_length=20, blank = True)
+	profession = models.CharField(max_length=20)
 	email = models.EmailField(max_length = 50, blank = True)
 	mobile_number = models.DecimalField(max_digits=10, decimal_places=0, blank = True)
-	residence = models.ForeignKey('House', on_delete = models.CASCADE)
-	
+	aadhar_number = models.DecimalField(max_digits = 12, decimal_places = 0, unique = True)
+	house = models.ForeignKey('House', on_delete = models.CASCADE)
 	
 class House(models.Model):
-	name = models.CharField(max_length=10, primary_key=True)
-	no_of_residents = models.PositiveSmallIntegerField()
+	house_id = models.CharField(max_length=10, primary_key=True)
+	spoc = models.CharField(max_length=30, blank = False)
 	no_of_vehicles = models.PositiveSmallIntegerField()
 	street_number = models.PositiveSmallIntegerField()
 	place = models.ForeignKey('Zone', on_delete = models.CASCADE)
