@@ -1,3 +1,9 @@
 /restFulAPI/settings.py
 readme.txt
 *.pyc
+/*.pyc
+/*/*/*.pyc
+/*/*/*/*.pyc
+/*/*/*/*/*.pyc
+/*/*/__pycache__/*
+/*/*/*/__pycache__/*
