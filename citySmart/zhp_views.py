@@ -7,10 +7,26 @@ from rest_framework.generics import GenericAPIView as GNVW
 
 from . import models as MDL, Model_Serializers as SRLZR
 
+class Zone(GNVW, MXN.RetrieveModelMixin, MXN.DestroyModelMixin):
+	queryset = MDL.Zone.objects.all()
+	lookup_field = 'zone_id'
+	lookup_url_kwarg = 'zone_id'
+	
+	serializer_class = SRLZR.Zone_Serializer
+	
+	def get(self, request, zone_id):
+		return self.retrieve(request, zone_id)
+			
+	def delete(self, request, zone_id):
+		return self.destroy(request, zone_id)
+			
+	def post(self, request, zone_id, format = None):
+		pass
+
 class House(GNVW, MXN.RetrieveModelMixin, MXN.DestroyModelMixin):
 	queryset = MDL.House.objects.all()
-	lookup_field = 'name'
-	lookup_url_kwarg = 'house_name'
+	lookup_field = 'house_id'
+	lookup_url_kwarg = 'house_number'
 	
 	serializer_class = SRLZR.House_Serializer
 	
