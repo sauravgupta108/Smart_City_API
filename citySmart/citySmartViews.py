@@ -27,9 +27,15 @@ def get_zone(zone_id):
 @api_view()
 def houses_List(request):
 	list_of_houses = MDL.House.objects.all()
-	serialized_list_of_houses = SRLZR.House_Serializer(list_of_houses, many = True)
-	return Response(serialized_list_of_houses.data)
+	serialized_list = SRLZR.House_Serializer(list_of_houses, many = True)
+	return Response(serialized_list.data)
 
+@api_view()
+def zones_List(request):
+	list_of_zones = MDL.Zone.objects.all()
+	serialized_list = SRLZR.Zone_Serializer(list_of_zones, many = True)
+	return Response(serialized_list.data)
+	
 @api_view()
 def street_lights_list(request):
 	street_light_list = MDL.Street_light.objects.all()

@@ -4,12 +4,12 @@ from . import models
 class Person_Serializer(SRLZR.ModelSerializer):
 	class Meta:
 		model = models.Person
-		fields = ('name', 'date_of_birth', 'profession', 'residence')
+		fields = ('name', 'profession', 'house')
 		
 class House_Serializer(SRLZR.ModelSerializer):
 	class Meta:
 		model = models.House
-		fields = ('name','no_of_residents', 'no_of_vehicles', 'street_number', 'place')
+		fields = ('house_id','spoc', 'no_of_vehicles', 'street_number', 'place')
 		
 class Zone_Serializer(SRLZR.ModelSerializer):
 	class Meta:
