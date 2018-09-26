@@ -20,4 +20,5 @@ urlpatterns = [
     path('admin/', admin.site.urls),
 	path('citysmart/', include('citySmart.citySmartUrls')),
 	path('testapi/', include('testApi.testApiUrls')),
+	path('secure/', include('api_security.api_security_urls'))
 ]
