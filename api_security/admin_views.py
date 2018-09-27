@@ -1,8 +1,7 @@
 from django.shortcuts import render
 from django.http import HttpResponse
 
-import copy
-
+from .security import Validator as vldtr, Token_handler as tkn, Key_handler as scrt
 from . import models, model_serializer as MDLSZ
 
 from rest_framework.views import APIView
@@ -16,5 +15,15 @@ def test(request):
 class Authentication(APIView):
 	def get(self, request, format = None):
 		return Response(request.authenticators)
+	def post(self, request, format = None):
+		credentials = {}
+		credentials['user_id'] = request.POST['user_id']
+		credentials['password'] = request.POST['password']
+		rslt = vldtr.are_valid(credentials)
+		if rslt[0]:
+			token = tkn.generate_token(credentials['user_id'], rslt[1])
+			return Response(token)
+		else:
+			return Response({'details':'Invalid Credentials'}, status = status.HTTP_401_UNAUTHORIZED)
 		
 	
