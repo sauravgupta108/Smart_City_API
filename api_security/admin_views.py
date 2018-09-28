@@ -21,7 +21,7 @@ class Authentication(APIView):
 		credentials['password'] = request.POST['password']
 		rslt = vldtr.are_valid(credentials)
 		if rslt[0]:
-			token = tkn.generate_token(credentials['user_id'], rslt[1])
+			token = tkn().generate_token(credentials['user_id'], rslt[1])
 			return Response(token)
 		else:
 			return Response({'details':'Invalid Credentials'}, status = status.HTTP_401_UNAUTHORIZED)

@@ -16,7 +16,7 @@ class Token(models.Model):
 	key = models.CharField(max_length = 10, unique = True)
 	value = models.CharField(max_length = 50, unique = True)
 	
-class Token_history(models.Model):
+class Token_usage_history(models.Model):
 	user = models.ForeignKey(Administration, on_delete = models.CASCADE)
 	operation = models.CharField(max_length = 8)
 	summary = models.CharField(max_length = 30)
