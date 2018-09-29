@@ -232,3 +232,6 @@ class Water_tank(GNVW, MXN.RetrieveModelMixin, MXN.DestroyModelMixin):
 			return Response({'street_number':'Positive integers less than 20 are valid',"filled_percentage":"Integer values between 0-100 are only valid"},\
 							 status = status.HTTP_400_BAD_REQUEST)
 							 
+def access_code(key, http_action):
+	pass
+	

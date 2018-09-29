@@ -1,0 +1,26 @@
+{
+    "life":"15",
+    "permission":  [
+        {
+            "Secretary": [
+                {
+                    "GET":"True",
+                    "PATCH":"True",
+                    "POST":"False",
+                    "PUT":"True",
+                    "DELETE":"False"
+                }
+            ],
+
+            "ZoneHead": [
+                {
+                    "GET":"True",
+                    "PATCH":"True",
+                    "PUT":"True",
+                    "POST":"True",
+                    "DELETE":"True"
+                }
+            ]
+        }
+    ]
+}

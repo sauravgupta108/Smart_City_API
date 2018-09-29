@@ -1,4 +1,7 @@
-import random
+import random, json, base64
+from ..models import Administration as adm
+from .Validator import Validator as vldtr
+from django.core.exceptions import ObjectDoesNotExist, MultipleOgjectsReturned
 
 class Key_handler:
     def generate_key(self):
@@ -25,5 +28,11 @@ class Key_handler:
           fnlLst[tmp]+=1
 
         return fnlLst
-    
-    
+        
+    def validate_key(self, key, user_id):
+        valid_tpl = vldtr.is_valid_user(user_id)
+        if valid_tpl[0]:
+            secret_key = valid_tpl[1] + "#"
+            
+        else:
+            return "401"
