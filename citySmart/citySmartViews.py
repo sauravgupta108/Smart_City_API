@@ -70,8 +70,9 @@ class Street_light(GNVW, MXN.RetrieveModelMixin, MXN.DestroyModelMixin):
 			return Response({"details":"Key and client_id required."}, status = status.HTTP_400_BAD_REQUEST)
 		
 		if vldt().has_permission(key, client_id, 'GET'):
-			tkn().update_token_history(client_id, 'GET', 'light' + light_no) #save token history
+			tkn().update_token_history(client_id, 'GET', 'light : ' + light_no) #save token history
 			return self.retrieve(request, light_no)
+			
 		else:
 			return Response({'details': ' '}, status = staus.HTTP_403_Forbidden)
 		
