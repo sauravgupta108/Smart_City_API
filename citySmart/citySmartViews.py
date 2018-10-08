@@ -1,5 +1,5 @@
 from django.http import HttpResponse
-import copy
+import copy, base64
 
 from rest_framework.views import APIView
 from rest_framework.response import Response
@@ -8,9 +8,10 @@ from rest_framework import status, mixins as MXN
 from rest_framework.generics import GenericAPIView as GNVW
 
 from . import models as MDL, Model_Serializers as SRLZR
+from api_security.security import Validator as vldt, Token_handler as tkn
 
 def index(request):
-	return HttpResponse("HEllo....!!!")
+	return HttpResponse("Hello....!!!")
 
 def get_new_number(str_number, padding): #HN010002, 4 
 	num_part = int(str_number[len(str_number)-padding:])+1
@@ -62,7 +63,17 @@ class Street_light(GNVW, MXN.RetrieveModelMixin, MXN.DestroyModelMixin):
 	serializer_class = SRLZR.Street_light_Serializer
 	
 	def get(self, request, light_no):
-		return self.retrieve(request, light_no)
+		try:			
+			key = request.query_params["key"]
+			client_id = request.query_params["client_id"]
+		except KeyError:
+			return Response({"details":"Key and client_id required."}, status = status.HTTP_400_BAD_REQUEST)
+		
+		if vldt().has_permission(key, client_id, 'GET'):
+			tkn().update_token_history(client_id, 'GET', 'light' + light_no) #save token history
+			return self.retrieve(request, light_no)
+		else:
+			return Response({'details': ' '}, status = staus.HTTP_403_Forbidden)
 		
 	def delete(self, request, light_no):
 		return self.destroy(request, light_no)
@@ -232,6 +243,3 @@ class Water_tank(GNVW, MXN.RetrieveModelMixin, MXN.DestroyModelMixin):
 			return Response({'street_number':'Positive integers less than 20 are valid',"filled_percentage":"Integer values between 0-100 are only valid"},\
 							 status = status.HTTP_400_BAD_REQUEST)
 							 
-def access_code(key, http_action):
-	pass
-	

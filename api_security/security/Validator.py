@@ -1,5 +1,9 @@
 from ..models import Administration as admn
-from django.core.exceptions import ObjectDoesNotExist, MultipleOgjectsReturned
+from .Key_handler import Key_handler as kh
+from django.core.exceptions import ObjectDoesNotExist, MultipleObjectsReturned
+
+import json
+
 
 class Validator:
     def are_valid(crdntls):
@@ -12,9 +16,11 @@ class Validator:
             else: return [False, None]
         except: return [False, None]
         
-    def is_valid_user(self, user_id):
-        try:
-            user_secret_key = admn.objects.get(username = user_id).secret_key
-            return (True, user_secret_key)
-        except (ObjectDoesNotExist, MultipleOgjectsReturned) as err:
-            return (False, None)
+    def has_permission(self, key, client_id, method):
+        valid, role = kh().is_valid(key, client_id)
+        if valid:
+            with open('/opt/app/django/restFulAPI/api_security/security/config/token_config.json','r') as tkconf:
+                permission = json.load(tkconf)["permission"][0][role][0][method]
+            return bool(int(permission))
+
+        else: return False
