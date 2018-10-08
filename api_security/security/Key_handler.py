@@ -1,7 +1,10 @@
 import random, json, base64
-from ..models import Administration as adm
-from .Validator import Validator as vldtr
-from django.core.exceptions import ObjectDoesNotExist, MultipleOgjectsReturned
+from ..models import Administration as admn, Token as tkn
+
+from django.core.exceptions import ObjectDoesNotExist, MultipleObjectsReturned
+
+import base64
+from Crypto.Cipher import AES
 
 class Key_handler:
     def generate_key(self):
@@ -29,10 +32,22 @@ class Key_handler:
 
         return fnlLst
         
-    def validate_key(self, key, user_id):
-        valid_tpl = vldtr.is_valid_user(user_id)
-        if valid_tpl[0]:
-            secret_key = valid_tpl[1] + "#"
-            
-        else:
-            return "401"
+    def is_valid(self, key, client_id):
+        try:
+            secret_key = admn.objects.get(username = client_id).secret_key
+            cipher = AES.new((secret_key + '#').encode())
+        except (ObjectDoesNotExist, MultipleObjectsReturned) as e:
+            return [False, None]
+        
+        url_key = base64.urlsafe_b64decode(key)
+        decrypted_key = ((cipher.decrypt(url_key)).decode())[:10]
+        
+        try:
+            tkn_val = tkn.objects.get(tkn_key = decrypted_key).value
+            user, date, role = tkn_val.split('~')
+            if user == client_id:
+                return [True, role]
+            else:
+                return [False, None]
+        except:
+            return [False, None]

@@ -13,7 +13,7 @@ class Administration(models.Model):
 	
 class Token(models.Model):
 	user = models.OneToOneField(Administration, on_delete = models.CASCADE)
-	key = models.CharField(max_length = 10, unique = True)
+	tkn_key = models.CharField(max_length = 10, unique = True)
 	value = models.CharField(max_length = 50, unique = True)
 	
 class Token_usage_history(models.Model):
