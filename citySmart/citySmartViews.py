@@ -63,6 +63,11 @@ class Street_light(GNVW, MXN.RetrieveModelMixin, MXN.DestroyModelMixin):
 	serializer_class = SRLZR.Street_light_Serializer
 	
 	def get(self, request, light_no):
+<<<<<<< HEAD
+		tkn().update_token_history(request.query_params['client_id'], 'GET', 'light : ' + light_no)
+		return self.retrieve(request, light_no)
+				
+=======
 		try:			
 			key = request.query_params["key"]
 			client_id = request.query_params["client_id"]
@@ -70,12 +75,17 @@ class Street_light(GNVW, MXN.RetrieveModelMixin, MXN.DestroyModelMixin):
 			return Response({"details":"Key and client_id required."}, status = status.HTTP_400_BAD_REQUEST)
 		
 		if vldt().has_permission(key, client_id, 'GET'):
+<<<<<<< HEAD
 			tkn().update_token_history(client_id, 'GET', 'light : ' + light_no) #save token history
+=======
+			tkn().update_token_history(client_id, 'GET', 'light' + light_no) #save token history
+>>>>>>> first
 			return self.retrieve(request, light_no)
 			
 		else:
 			return Response({'details': ' '}, status = staus.HTTP_403_Forbidden)
 		
+>>>>>>> 816d41947ae3d94784a7906129e706d0a66adb81
 	def delete(self, request, light_no):
 		return self.destroy(request, light_no)
 		
