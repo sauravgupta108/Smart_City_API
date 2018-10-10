@@ -38,18 +38,16 @@ class Key_handler:
             cipher = AES.new((secret_key + '#').encode())
         except (ObjectDoesNotExist, MultipleObjectsReturned) as e:
             return [False, None]
-        
-<<<<<<< HEAD
+
         try:
             url_key = base64.urlsafe_b64decode(key)
             decrypted_key = ((cipher.decrypt(url_key)).decode())[:10]
             
-=======
-        url_key = base64.urlsafe_b64decode(key)
-        decrypted_key = ((cipher.decrypt(url_key)).decode())[:10]
+        
         
         try:
->>>>>>> 816d41947ae3d94784a7906129e706d0a66adb81
+            url_key = base64.urlsafe_b64decode(key)
+            decrypted_key = ((cipher.decrypt(url_key)).decode())[:10]
             tkn_val = tkn.objects.get(tkn_key = decrypted_key).value
             user, date, role = tkn_val.split('~')
             if user == client_id:
