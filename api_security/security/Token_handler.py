@@ -47,8 +47,6 @@ class Token_handler:
         user = mdl.Administration.objects.get(username = user_id)
         mdl.Token_usage_history.objects.create(user = user, operation = operation, summary = smry)
         self.delete_token(user_id)
-<<<<<<< HEAD
         del(user)
-=======
->>>>>>> 816d41947ae3d94784a7906129e706d0a66adb81
+
         

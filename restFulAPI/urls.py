@@ -16,9 +16,9 @@ Including another URLconf
 from django.contrib import admin
 from django.urls import path, include
 
-urlpatterns = [
-    path('admin/', admin.site.urls),
-	path('citysmart/', include('citySmart.citySmartUrls')),
-	path('testapi/', include('testApi.testApiUrls')),
+urlpatterns = [    
+	path('citysmart/', include('citySmart.citySmartUrls')),	
 	path('secure/', include('api_security.api_security_urls'))
 ]
+
+#path('admin/', admin.site.urls),path('testapi/', include('testApi.testApiUrls')),

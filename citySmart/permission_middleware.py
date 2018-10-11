@@ -1,5 +1,8 @@
 from rest_framework.response import Response
 from django.http import HttpResponse
+from . import citySmartViews as csv
+
+import inspect
 
 from api_security.security import Validator as vldt
 
@@ -12,9 +15,13 @@ class check_permission(object):
 		return response
 
 	def process_view(self, request, func, args, kwargs):
-		app_name = request.path_info.split('/')[1]
-		
+
+		app_name = request.path_info.split('/')[1]				
 		if app_name == 'citysmart':
+
+			if func.__name__ not in ['Street_light', 'Dustbin', 'Water_tank', 'Zone', 'House', 'Person']:
+				return None
+
 			try:
 				key = request.GET["key"]
 				client_id = request.GET["client_id"]
@@ -22,7 +29,7 @@ class check_permission(object):
 				return HttpResponse(str({"details":"Key and client_id required."}), status = 400)
 
 			if not vldt().has_permission(key, client_id, request.method):
-				return HttpResponse(str({'details': 'Not Authorized.'}), status = 403)
+				return HttpResponse(str({"details": "Not Authorized."}), status = 403)
 
 		return None
 
