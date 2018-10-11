@@ -2,8 +2,6 @@ from django.urls import path
 from . import citySmartViews as views, zhp_views as zhp
 
 urlpatterns = [
-path('', views.index, name = 'apiHome'),
-
 path('zones', views.zones_list, name = 'zones'),
 path('street_lights', views.street_lights_list, name = 'street_lights'),
 path('dustbins', views.dustbin_list, name = 'dustbins'),
@@ -16,4 +14,4 @@ path('water_tank/<water_tank_id>', views.Water_tank.as_view(), name = 'house_det
 ]
 
 #path('houses', views.houses_list, name = 'houses'),
-#path('house/<house_number>', zhp.House.as_view(), name = 'house_detail'),
+#path('house/<house_number>', zhp.House.as_view(), name = 'house_detail'), path('', views.index, name = 'apiHome'),
