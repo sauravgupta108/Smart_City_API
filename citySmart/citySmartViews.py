@@ -1,4 +1,5 @@
 from django.http import HttpResponse
+from django.core.exceptions import ValidationError
 import copy, base64
 
 from rest_framework.views import APIView
@@ -8,7 +9,7 @@ from rest_framework import status, mixins as MXN
 from rest_framework.generics import GenericAPIView as GNVW
 
 from . import models as MDL, Model_Serializers as SRLZR
-from api_security.security import Validator as vldt, Token_handler as tkn
+from api_security.security import Token_handler as tkn
 
 def index(request):
 	return HttpResponse("Hello....!!!")
@@ -26,13 +27,13 @@ def get_zone(zone_id):
 		return None
 
 @api_view()
-def houses_List(request):
+def houses_list(request):
 	list_of_houses = MDL.House.objects.all()
 	serialized_list = SRLZR.House_Serializer(list_of_houses, many = True)
 	return Response(serialized_list.data)
 
 @api_view()
-def zones_List(request):
+def zones_list(request):
 	list_of_zones = MDL.Zone.objects.all()
 	serialized_list = SRLZR.Zone_Serializer(list_of_zones, many = True)
 	return Response(serialized_list.data)
@@ -63,41 +64,39 @@ class Street_light(GNVW, MXN.RetrieveModelMixin, MXN.DestroyModelMixin):
 	serializer_class = SRLZR.Street_light_Serializer
 	
 	def get(self, request, light_no):
-<<<<<<< HEAD
 		tkn().update_token_history(request.query_params['client_id'], 'GET', 'light : ' + light_no)
 		return self.retrieve(request, light_no)
-				
-=======
-		try:			
-			key = request.query_params["key"]
-			client_id = request.query_params["client_id"]
-		except KeyError:
-			return Response({"details":"Key and client_id required."}, status = status.HTTP_400_BAD_REQUEST)
-		
-		if vldt().has_permission(key, client_id, 'GET'):
-			tkn().update_token_history(client_id, 'GET', 'light' + light_no) #save token history
-			return self.retrieve(request, light_no)
-		else:
-			return Response({'details': ' '}, status = staus.HTTP_403_Forbidden)
-		
->>>>>>> 816d41947ae3d94784a7906129e706d0a66adb81
+
 	def delete(self, request, light_no):
+		tkn().update_token_history(request.query_params['client_id'], "DELETE", 'light : ' + light_no)
 		return self.destroy(request, light_no)
 		
 	def patch(self, request, light_no):
-		query_set = MDL.Street_light.objects.filter(light_id = light_no)
-		
-		if query_set.exists() is False:
-			return Response({"details":"Invalid light number. Provide correct ID in url"}, status = status.HTTP_400_BAD_REQUEST)
+		try:
+			light = MDL.Street_light.objects.get(light_id = light_no)
+		except:
+			return Response({"detail":"Invalid Street_light ID."}, status = status.HTTP_400_BAD_REQUEST)
 		
 		try:
 			if request.data['live_status'] not in ["DEAD","SICK","ALIVE"]:
 				raise ValueError
-			query_set.update(live_status = request.data['live_status'], running_status = request.data['running_status'])
+			#query_set.update(live_status = request.data['live_status'], running_status = request.data['running_status'])
+			light.live_status = request.data['live_status']
+			light.running_status = request.data['running_status']
+			
+			if request.data['live_status'] in ["DEAD"]:
+				light.running_status = "0"
+			
+			light.save()
+			tkn().update_token_history(request.query_params['client_id'], 'UPDATE', 'light : ' + light_no)
 			return self.retrieve(request, light_no)
-		except:
-			return Response({"live_status":"Valid values are ALIVE, DEAD, SICK","running_status": "valid values are True/1 or False/0" }, status=status.HTTP_400_BAD_REQUEST)
-		
+		except KeyError:
+			return Response({"detail" : "live_status or running_status can't be None."}, status=status.HTTP_400_BAD_REQUEST)
+		except ValueError:
+			return Response({"detail" : "live_status - valid values are DEAD, SICK, ALIVE"}, status=status.HTTP_400_BAD_REQUEST)
+		except ValidationError:
+			return Response({"detail" : "running_status - valid values are True/1 or False/0"}, status=status.HTTP_400_BAD_REQUEST)
+
 	def post(self, request, light_no):
 		light_details = copy.deepcopy(request.data)
 		zone = get_zone(light_details['zone_id'])
@@ -123,6 +122,7 @@ class Street_light(GNVW, MXN.RetrieveModelMixin, MXN.DestroyModelMixin):
 			serialized_details = SRLZR.Street_light_Serializer(data = light_details)
 			if serialized_details.is_valid():
 				serialized_details.save()
+				tkn().update_token_history(request.query_params['client_id'], 'ADD', 'light : ' + new_light_number)
 				return Response({"details":"Light added successfully", "light_ID":light_details['light_id']},\
 								status = status.HTTP_201_CREATED)
 				
@@ -140,22 +140,28 @@ class Dustbin(GNVW, MXN.RetrieveModelMixin, MXN.DestroyModelMixin):
 	serializer_class = SRLZR.Dustbin_Serializer
 	
 	def get(self, request, dustbin_id):
+		tkn().update_token_history(request.query_params['client_id'], "GET", 'Dustbin : ' + dustbin_id)
 		return self.retrieve(request, dustbin_id)
 		
 	def delete(self, request, dustbin_id):
+		tkn().update_token_history(request.query_params['client_id'], "DELETE", 'Dustbin : ' + dustbin_id)
 		return self.destroy(request, dustbin_id)
 		
 	def patch(self, request, dustbin_id):
-		query_set = MDL.Dustbin.objects.filter(dustbin_id = dustbin_id)
-		
-		if query_set.exists() is False:
-			return Response({"details":"Invalid Dustbin ID. Provide correct ID in url"}, status = status.HTTP_400_BAD_REQUEST)
+		try:
+			dustbin = MDL.Dustbin.objects.get(dustbin_id = dustbin_id)
+		except:
+			return Response({"detail":"Invalid Dustbin ID."}, status = status.HTTP_400_BAD_REQUEST)
 		
 		try:
-			query_set.update(filled_status = request.data['filled_status'])
+			dustbin.filled_status = request.data['filled_status']
+			dustbin.save()
+			tkn().update_token_history(request.query_params['client_id'], "UPDATE", 'Dustbin : ' + dustbin_id)
 			return self.retrieve(request, dustbin_id)
-		except:
-			return Response({"details":"Valid values for filled_stustus: True/1 or False/0"}, status=status.HTTP_400_BAD_REQUEST)
+		except KeyError:
+			return Response({"detail" : "filled_status is None."}, status = status.HTTP_400_BAD_REQUEST)
+		except ValidationError:
+			return Response({"detail":"Valid values for filled_status (True/1 or False/0)"}, status=status.HTTP_400_BAD_REQUEST)					
 	
 	def post(self, request, dustbin_id):
 		dustbin_details = copy.deepcopy(request.data)
@@ -180,14 +186,15 @@ class Dustbin(GNVW, MXN.RetrieveModelMixin, MXN.DestroyModelMixin):
 			serialized_details = self.serializer_class(data = dustbin_details)
 			if serialized_details.is_valid():
 				serialized_details.save()
-				return Response({"details":"New Dustbin details added successfully","Dustbin":dustbin_details['dustbin_id']}, \
+				tkn().update_token_history(request.query_params['client_id'], "ADD", 'Dustbin : ' + new_dustbin)
+				return Response({"detail":"New Dustbin details added successfully","Dustbin":dustbin_details['dustbin_id']}, \
 								status = status.HTTP_201_CREATED)
 			else:
 				raise ValueError
 		except (ValueError, KeyError) as error:
 			return Response({'street_number':'Positive integers less than 20 are valid','filled_status':'True/1 or False/0 are valid'},\
 							status = status.HTTP_400_BAD_REQUEST)
-			
+	
 class Water_tank(GNVW, MXN.RetrieveModelMixin, MXN.DestroyModelMixin):
 	queryset = MDL.Water_tank.objects.all()
 	lookup_field = 'water_tank_id'
@@ -196,24 +203,30 @@ class Water_tank(GNVW, MXN.RetrieveModelMixin, MXN.DestroyModelMixin):
 	serializer_class = SRLZR.Water_tank_Serializer
 	
 	def get(self, request, water_tank_id):
+		tkn().update_token_history(request.query_params['client_id'], "GET", 'Water_tank : ' + water_tank_id)
 		return self.retrieve(request, water_tank_id)
 		
 	def delete(self, request, water_tank_id):
+		tkn().update_token_history(request.query_params['client_id'], "DELETE", 'Water_tank : ' + water_tank_id)
 		return self.destroy(request, water_tank_id)
 		
 	def patch(self, request, water_tank_id):
-		query_set = MDL.Water_tank.objects.filter(water_tank_id = water_tank_id)
-		
-		if query_set.exists() is False:
-			return Response({"details":"Invalid Water_tank ID. Provide correct ID in url"}, status = status.HTTP_400_BAD_REQUEST)
+		try:
+			tank = MDL.Water_tank.objects.get(water_tank_id = water_tank_id)
+		except:
+			return Response({"detail":"Invalid Water_tank ID."}, status = status.HTTP_400_BAD_REQUEST)
 		
 		try:
 			if int(request.data['filled_percentage']) > 100:
 				raise ValueError
-			query_set.update(filled_percentage = request.data['filled_percentage'])
+			tank.filled_percentage = request.data['filled_percentage']
+			tank.save()
+			tkn().update_token_history(request.query_params['client_id'], "UPDATE", 'Water_tank : ' + water_tank_id)
 			return self.retrieve(request, water_tank_id)
-		except:
-			return Response({"filled_percentage":"Integer values between 0-100 are only valid"}, status=status.HTTP_400_BAD_REQUEST)
+		except KeyError:
+			return Response({"detail" : "filled_percentage is None."}, status = status.HTTP_400_BAD_REQUEST)
+		except ValueError:
+			return Response({"filled_percentage":"Only integer values between 0-100 are valid"}, status=status.HTTP_400_BAD_REQUEST)
 	
 	def post(self, request, water_tank_id):
 		water_tank_details = copy.deepcopy(request.data)
@@ -241,11 +254,12 @@ class Water_tank(GNVW, MXN.RetrieveModelMixin, MXN.DestroyModelMixin):
 			serialized_details = self.serializer_class(data = water_tank_details)
 			if serialized_details.is_valid():
 				serialized_details.save()
-				return Response({"details":"New Water Tank details added successfully",'Water_tank':water_tank_details['water_tank_id']}, \
+				tkn().update_token_history(request.query_params['client_id'], "ADD", 'Water_tank : ' + new_water_tank)
+				return Response({"detail":"New Water Tank details added successfully",'Water_tank':water_tank_details['water_tank_id']}, \
 								status = status.HTTP_201_CREATED)
 			else:
 				raise ValueError
 		except (ValueError, KeyError) as error:
 			return Response({'street_number':'Positive integers less than 20 are valid',"filled_percentage":"Integer values between 0-100 are only valid"},\
 							 status = status.HTTP_400_BAD_REQUEST)
-							 
+	
