@@ -39,20 +39,71 @@ def zones_list(request):
 	return Response(serialized_list.data)
 	
 @api_view()
-def street_lights_list(request):
+def street_lights_list(request):	
 	street_light_list = MDL.Street_light.objects.all()
+	
+	# Filters
+	if "sn" in request.query_params:
+		try:
+			street_light_list = street_light_list.filter(street_number = int(request.query_params["sn"]))
+		except ValueError:
+			pass
+	
+	if "ls" in request.query_params:
+		street_light_list = street_light_list.filter(live_status = request.query_params["ls"])
+
+	if "rs" in request.query_params:
+		street_light_list = street_light_list.filter(runnig_status = request.query_params["rs"])
+
+	if "zn" in request.query_params:
+		street_light_list = street_light_list.filter(zone = request.query_params["zn"])
+
 	serialized_list = SRLZR.Street_light_Serializer(street_light_list, many = True)
 	return Response(serialized_list.data)
 	
 @api_view()
 def dustbin_list(request):
 	dustbin_list = MDL.Dustbin.objects.all()
+
+	# Filters
+	if "sn" in request.query_params:
+		try:
+			dustbin_list = dustbin_list.filter(street_number = int(request.query_params["sn"]))
+		except ValueError:
+			pass
+	
+	if "fs" in request.query_params:
+		try:
+			dustbin_list = dustbin_list.filter(filled_status = request.query_params["fs"])
+		except:
+			pass
+
+	if "zn" in request.query_params:
+		dustbin_list = dustbin_list.filter(zone = request.query_params["zn"])
+
 	serialized_list = SRLZR.Dustbin_Serializer(dustbin_list, many = True)
 	return Response(serialized_list.data)
 	
 @api_view()
 def water_tank_list(request):
 	water_tank_list = MDL.Water_tank.objects.all()
+
+	# Filters
+	if "sn" in request.query_params:
+		try:
+			water_tank_list = water_tank_list.filter(street_number = int(request.query_params["sn"]))
+		except ValueError:
+			pass
+	
+	if "fp" in request.query_params:
+		try:
+			water_tank_list = water_tank_list.filter(filled_status = int(request.query_params["fp"]))
+		except ValueError:
+			pass
+
+	if "zn" in request.query_params:
+		water_tank_list = water_tank_list.filter(zone = request.query_params["zn"])
+
 	serialized_list = SRLZR.Water_tank_Serializer(water_tank_list, many = True)
 	return Response(serialized_list.data)
 	
