@@ -47,13 +47,17 @@ def street_lights_list(request):
 		try:
 			street_light_list = street_light_list.filter(street_number = int(request.query_params["sn"]))
 		except ValueError:
-			pass
+			return Response([])
 	
 	if "ls" in request.query_params:
 		street_light_list = street_light_list.filter(live_status = request.query_params["ls"])
 
 	if "rs" in request.query_params:
-		street_light_list = street_light_list.filter(runnig_status = request.query_params["rs"])
+		try:
+			street_light_list = street_light_list.filter(running_status = request.query_params["rs"])
+		except ValidationError:
+			return Response([])
+
 
 	if "zn" in request.query_params:
 		street_light_list = street_light_list.filter(zone = request.query_params["zn"])
@@ -70,13 +74,13 @@ def dustbin_list(request):
 		try:
 			dustbin_list = dustbin_list.filter(street_number = int(request.query_params["sn"]))
 		except ValueError:
-			pass
+			return Response([])
 	
 	if "fs" in request.query_params:
 		try:
 			dustbin_list = dustbin_list.filter(filled_status = request.query_params["fs"])
 		except:
-			pass
+			return Response([])
 
 	if "zn" in request.query_params:
 		dustbin_list = dustbin_list.filter(zone = request.query_params["zn"])
@@ -93,13 +97,13 @@ def water_tank_list(request):
 		try:
 			water_tank_list = water_tank_list.filter(street_number = int(request.query_params["sn"]))
 		except ValueError:
-			pass
+			return Response([])
 	
 	if "fp" in request.query_params:
 		try:
-			water_tank_list = water_tank_list.filter(filled_status = int(request.query_params["fp"]))
+			water_tank_list = water_tank_list.filter(filled_percentage__lte = int(request.query_params["fp"]))
 		except ValueError:
-			pass
+			return Response([])
 
 	if "zn" in request.query_params:
 		water_tank_list = water_tank_list.filter(zone = request.query_params["zn"])
