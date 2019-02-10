@@ -1,4 +1,6 @@
 from django.db import models
+from . import models_helper as mh
+
 
 class Person(models.Model):
 	person_id = models.CharField(max_length=12, primary_key = True)
@@ -25,11 +27,10 @@ class Zone(models.Model):
 	def __str__(self):
 		return str({'id':self.zone_id, 'name':self.name, 'incharge':self.person_incharge})
 	
-class Street_light(models.Model):
-	LIVE_CHOICES = (('ALIVE','alive'),('SICK', 'sick'),('DEAD','dead'))
+class Street_light(models.Model):	
 	light_id = models.CharField(max_length=5, primary_key=True)
 	street_number = models.PositiveSmallIntegerField()
-	live_status = models.CharField(max_length=5, choices=LIVE_CHOICES, default='DEAD')
+	health = models.PositiveSmallIntegerField(default=mh.LIGHT_DEAD)
 	running_status = models.BooleanField(default=False)
 	zone = models.ForeignKey('Zone', on_delete=models.CASCADE)
 	

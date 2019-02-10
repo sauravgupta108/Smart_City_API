@@ -1,6 +1,7 @@
 from django.http import HttpResponse
 from django.core.exceptions import ValidationError
 import copy, base64
+from . import models_helper as mh
 
 from rest_framework.views import APIView
 from rest_framework.response import Response
@@ -43,24 +44,23 @@ def street_lights_list(request):
 	street_light_list = MDL.Street_light.objects.all()
 	
 	# Filters
-	if "sn" in request.query_params:
-		try:
-			street_light_list = street_light_list.filter(street_number = int(request.query_params["sn"]))
-		except ValueError:
-			return Response([])
+	try:
+		if "sn" in request.query_params:		
+			street_light_list = street_light_list.filter(street_number = int(request.query_params["sn"]))		
 	
-	if "ls" in request.query_params:
-		street_light_list = street_light_list.filter(live_status = request.query_params["ls"])
+		if "hlth" in request.query_params:
+			street_light_list = street_light_list.filter(health = int(request.query_params["hlth"]))
 
-	if "rs" in request.query_params:
-		try:
+		if "rs" in request.query_params:
 			street_light_list = street_light_list.filter(running_status = request.query_params["rs"])
-		except ValidationError:
-			return Response([])
 
+		if "zn" in request.query_params:
+			street_light_list = street_light_list.filter(zone = request.query_params["zn"])
 
-	if "zn" in request.query_params:
-		street_light_list = street_light_list.filter(zone = request.query_params["zn"])
+		if street_light_list.count() == 0:
+			raise TypeError
+	except:
+		return Response([])
 
 	serialized_list = SRLZR.Street_light_Serializer(street_light_list, many = True)
 	return Response(serialized_list.data)
@@ -126,29 +126,30 @@ class Street_light(GNVW, MXN.RetrieveModelMixin, MXN.DestroyModelMixin):
 		tkn().update_token_history(request.query_params['client_id'], "DELETE", 'light : ' + light_no)
 		return self.destroy(request, light_no)
 		
-	def patch(self, request, light_no):
+	def patch(self, request, light_no):		
 		try:
 			light = MDL.Street_light.objects.get(light_id = light_no)
 		except:
 			return Response({"detail":"Invalid Street_light ID."}, status = status.HTTP_400_BAD_REQUEST)
 		
 		try:
-			if request.data['live_status'] not in ["DEAD","SICK","ALIVE"]:
+			health_status = int(request.data['health'])
+			if health_status not in [mh.LIGHT_ALIVE, mh.LIGHT_SICK, mh.LIGHT_DEAD]:
 				raise ValueError
-			#query_set.update(live_status = request.data['live_status'], running_status = request.data['running_status'])
-			light.live_status = request.data['live_status']
+			
+			light.health = health_status
 			light.running_status = request.data['running_status']
 			
-			if request.data['live_status'] in ["DEAD"]:
-				light.running_status = "0"
+			if health_status == mh.LIGHT_DEAD:
+				light.running_status = False
 			
 			light.save()
 			tkn().update_token_history(request.query_params['client_id'], 'UPDATE', 'light : ' + light_no)
 			return self.retrieve(request, light_no)
 		except KeyError:
-			return Response({"detail" : "live_status or running_status can't be None."}, status=status.HTTP_400_BAD_REQUEST)
+			return Response({"detail" : "Health and running_status can't be None."}, status=status.HTTP_400_BAD_REQUEST)
 		except ValueError:
-			return Response({"detail" : "live_status - valid values are DEAD, SICK, ALIVE"}, status=status.HTTP_400_BAD_REQUEST)
+			return Response({"detail" : "Invalid Health status"}, status=status.HTTP_400_BAD_REQUEST)
 		except ValidationError:
 			return Response({"detail" : "running_status - valid values are True/1 or False/0"}, status=status.HTTP_400_BAD_REQUEST)
 

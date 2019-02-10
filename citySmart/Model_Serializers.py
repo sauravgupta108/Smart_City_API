@@ -19,7 +19,7 @@ class Zone_Serializer(SRLZR.ModelSerializer):
 class Street_light_Serializer(SRLZR.ModelSerializer):
 	class Meta:
 		model = models.Street_light
-		fields = ('light_id', 'street_number', 'live_status', 'running_status', 'zone')
+		fields = ('light_id', 'street_number', 'health', 'running_status', 'zone')
 		
 class Dustbin_Serializer(SRLZR.ModelSerializer):
 	class Meta:
