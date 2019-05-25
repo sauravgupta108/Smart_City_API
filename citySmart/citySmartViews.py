@@ -101,6 +101,17 @@ def water_tank_list(request):
 	
 	if "fp" in request.query_params:
 		try:
+			water_tank_list = water_tank_list.filter(filled_percentage = int(request.query_params["fp"]))
+		except ValueError:
+			return Response([])
+	if "fp_gt" in request.query_params:
+		try:
+			water_tank_list = water_tank_list.filter(filled_percentage__gte = int(request.query_params["fp"]))
+		except ValueError:
+			return Response([])
+
+	if "fp_lt" in request.query_params:
+		try:
 			water_tank_list = water_tank_list.filter(filled_percentage__lte = int(request.query_params["fp"]))
 		except ValueError:
 			return Response([])
